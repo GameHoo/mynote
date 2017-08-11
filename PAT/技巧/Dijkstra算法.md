@@ -22,9 +22,27 @@
 
 如果要记录路径，用一个数组记录各个节点的前驱结点。在算法进行第3步的时候更新这个数组。
 
-### 最短路径条数记录
+## 最短路径条数记录
 
-
+```c++
+if (d[u] + roads[u][i] < d[i])
+{
+	pre[i] = u;
+	d[i] = d[u] + roads[u][i];
+	Count[i] = Count[u];
+	rSum[i] = rSum[u] + rescueNumber[i];
+}
+else if (d[u] + roads[u][i] == d[i])
+{
+	Count[i] += Count[u];//新的中继点
+	if (rSum[u] + rescueNumber[i] > rSum[i])
+	{
+		pre[i] = u;
+		d[i] = d[u] + roads[u][i];
+		rSum[i] = rSum[u] + rescueNumber[i];
+	}
+}
+```
 
 
 
@@ -92,5 +110,4 @@ void shortest()
 		ShortestPath.push_back(i);
 	}
 }
-
 ```
