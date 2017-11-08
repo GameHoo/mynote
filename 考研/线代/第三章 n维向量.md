@@ -38,7 +38,7 @@ $存在k_1,k_2,k_3....使得\alpha_i的线性组合可以表示\beta$
 
 ### 定义
 
-​	$k_1\alpha_1+k_2\alpha_2+k_3\alpha=0$
+​	$k_1\alpha_1+k_2\alpha_2+k_3\alpha_3=0$
 
 >问 $\alpha_1能否由\alpha_2,\alpha_3线性表出$
 >
