@@ -1,0 +1,48 @@
+# 安装
+
+```
+(venv) $ pip install flask-bootstrap
+```
+app.py
+
+```python
+from flask_bootstrap import Bootstrap
+bootstrap=Bootstrap(app)
+```
+
+user.html
+
+```html
+{% extends "bootstrap/base.html" %}
+{% block title %}Flasky{% endblock %}
+{% block navbar %}
+    <div class="navbar navbar-inverse" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Flasky</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Home</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1>Hello,{{ name }}!</h1>
+        </div>
+    </div>
+{% endblock %}
+```
+
+# base template blocks
+
