@@ -160,6 +160,137 @@ type="color" required/>
 
 # Flux
 
+![1528630212164](1528630180890.png)
+
 使用Action表示程序变化
 
-把特定的Action传给Dispatcher,Dispatcher管理Action队列，然后把Action传给特定的
+>Every change requires an action. Every action provides the instructions to make the change.
+
+把特定的Action传给Dispatcher,Dispatcher管理Action队列，然后把Action传给特定的Store,Store收到Action之后就改变自身的数据，然后通知View重绘。
+
+## Action Creators
+
+Action 对应的函数 给指定的 dispatcher 发送 action
+
+```jsx
+const countdownActions = dispatcher =>
+({
+tick(currentCount) {
+dispatcher.handleAction({ type: 'TICK' })
+},
+reset(count) {
+dispatcher.handleAction({
+type: 'RESET',
+count
+})
+}
+})
+```
+
+
+
+## View
+
+从属性获取
+
+tick()、count()
+
+让View有发出Action的能力
+
+```jsx
+const Countdown = ({count, tick, reset}) => {
+if (count) {
+setTimeout(() => tick(), 1000)
+}
+return (count) ?
+<h1>{count}</h1> :
+<div onClick={() => reset(10)}>
+<span>CELEBRATE!!!</span>
+<span>(click to start over)</span>
+</div>
+}
+```
+
+
+
+## Dispatcher
+
+接受 Action ，把 Action 送给对应的store（store注册dispatcher）
+
+```jsx
+import Dispatcher from 'flux'
+class CountdownDispatcher extends Dispatcher {
+handleAction(action) {
+console.log('dispatching action:', action)
+this.dispatch({
+source: 'VIEW_ACTION',
+action
+})
+}
+}
+```
+
+
+
+## Stores
+
+继承于EventEmitter
+
+View 把 不同Action 对应的 UI改变 代码传给store，store在制定事件发生时调用View的代码改变UI。
+
+```jsx
+import { EventEmitter } from 'events'
+class CountdownStore extends EventEmitter {
+constructor(count=5, dispatcher) {
+super()
+this._count = count
+this.dispatcherIndex = dispatcher.register(
+this.dispatch.bind(this)
+)
+}
+get count() {
+return this._count
+}
+dispatch(payload) {
+const { type, count } = payload.action
+switch(type) {
+case "TICK":
+this._count = this._count - 1
+this.emit("TICK", this._count)
+return true
+case "RESET":
+this._count = count
+this.emit("RESET", this._count)
+return true
+}
+}
+```
+
+## main.py
+
+```jsx
+const appDispatcher = new CountdownDispatcher()
+const actions = countdownActions(appDispatcher)
+const store = new CountdownStore(10, appDispatcher)
+const render = count => ReactDOM.render(
+<Countdown count={count} {...actions} />,
+document.getElementById('react-container')
+)
+store.on("TICK", () => render(store.count))
+store.on("RESET", () => render(store.count))
+render(store.count)
+```
+
+## 总结
+
+Action->Dispatcher
+
+>Action Creater 调用 Dispatcher.handleAction 在 Dispatcher的队列中加入 Action
+
+Dispatcher->Stroe
+
+>Store里调用 Dispatcher的register把自己的事件处理代码 给Dispatcher
+
+Store->View
+
+>View订阅Store的事件
