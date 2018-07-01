@@ -294,3 +294,156 @@ Dispatcher->Stroe
 Store->View
 
 >View订阅Store的事件
+
+# Redux
+
+## Store
+
+创建
+
+```js
+const store = createStore(reducer,initialState)
+```
+
+更新
+
+```js
+store.dispatch(action)
+```
+
+
+
+## Reducer
+
+Reducer是一个这样的纯函数 (state,action)=>newState
+
+负责多个模块的Reducer 最后组成一个Reducer
+
+然后这个Reducer 接收 整个state 树 返回整个新的state树
+
+## Middleware
+
+Middleware  是 让你方便在 store 接收到 action 之前或者之后插入自己功能代码（比如日志记录）的技术
+
+### 为什么要用中间件？
+
+使用一个添加日志记录的功能来说明：
+
+1. 手动在每次调用store.dispatch时调用logging
+
+```js
+const action = addTodo('Use Redux')
+console.log('dispatching', action)
+store.dispatch(action)
+console.log('next state', store.getState())
+```
+
+>手动很麻烦，代码量大
+
+2. 包装 Dispatch
+
+```js
+function dispatchAndLog(store, action) {
+  console.log('dispatching', action)
+  store.dispatch(action)
+  console.log('next state', store.getState())
+}
+dispatchAndLog(store, addTodo('Use Redux'))
+```
+>要引入一个新的函数，不方便
+
+3. Monkeypatching Dispatch 
+
+```js
+const next = store.dispatch
+store.dispatch = function dispatchAndLog(action) {
+  console.log('dispatching', action)
+  let result = next(action)
+  console.log('next state', store.getState())
+  return result
+}
+```
+
+>如果要使用多个Middleware不方便
+
+4. 使用专门的函数隐藏Monkeypatching 细节
+
+```js
+function logger(store) {
+  const next = store.dispatch
+
+  // Previously:
+  // store.dispatch = function dispatchAndLog(action) {
+
+  return function dispatchAndLog(action) {
+    console.log('dispatching', action)
+    let result = next(action)
+    console.log('next state', store.getState())
+    return result
+  }
+}
+```
+
+
+
+```js
+function applyMiddlewareByMonkeypatching(store, middlewares) {
+  middlewares = middlewares.slice()
+  middlewares.reverse()
+
+  // Transform dispatch function with each middleware.
+  middlewares.forEach(middleware =>
+    store.dispatch = middleware(store)
+  )
+}
+```
+
+```js
+applyMiddlewareByMonkeypatching(store, [logger, crashReporter])
+```
+
+5. 不需要Monkeypatching 的写法
+
+```js
+function logger(store) {
+  return function wrapDispatchToAddLogging(next) {
+    return function dispatchAndLog(action) {
+      console.log('dispatching', action)
+      let result = next(action)
+      console.log('next state', store.getState())
+      return result
+    }
+  }
+}
+```
+
+>logger函数完成对指定的store安装一个日志功能的Middleware
+>
+>
+
+简写
+
+```js
+const logger = store => next => action => {
+  console.log('dispatching', action)
+  let result = next(action)
+  console.log('next state', store.getState())
+  return result
+}
+
+const crashReporter = store => next => action => {
+  try {
+    return next(action)
+  } catch (err) {
+    console.error('Caught an exception!', err)
+    Raven.captureException(err, {
+      extra: {
+        action,
+        state: store.getState()
+      }
+    })
+    throw err
+  }
+}
+```
+
